@@ -1,0 +1,89 @@
+[project]
+name = "rag-evaluation-platform"
+version = "1.0.0"
+description = "Production-grade RAG Evaluation Platform with LangGraph agents, DeepEval, LangSmith, and quality gates"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12"
+authors = [
+    { name = "RAG Evaluation Platform Contributors" },
+]
+keywords = [
+    "rag",
+    "evaluation",
+    "langgraph",
+    "deepeval",
+    "langsmith",
+    "quality-gates",
+    "ai-engineering",
+]
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "python-dotenv>=1.0.0",
+    "httpx>=0.27.0",
+    "streamlit>=1.40.0",
+    "langchain-community>=0.4.2",
+    "langchain-core>=1.5.3",
+    "pypdf>=6.14.2",
+    "langchain-text-splitters>=0.3.0",
+    "sentence-transformers>=5.6.1",
+    "chromadb>=1.0.0",
+    "openai>=2.52.0",
+    "google-genai>=1.0.0",
+    "deepeval>=2.0.0",
+    "langsmith>=0.3.0",
+    "langgraph>=0.2.0",
+    "mcp>=1.28,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",
+    "ruff>=0.8.0",
+    "allure-pytest>=2.13.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app", "frontend"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+markers = [
+    "integration: tests that require a working native vector DB runtime",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["app", "frontend", "scripts", "tests"]
+
+[tool.ruff.lint]
+# v1.0: keep lint focused on correctness (unused imports / undefined names).
+# Broader style rules (I/B/UP) can land in a dedicated formatting PR.
+select = ["E", "F"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*.py" = ["E402"]
+"tests/*.py" = ["E402"]
+"frontend/app.py" = ["E402"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",
+    "ruff>=0.8.0",
+    "allure-pytest>=2.13.0",
+]

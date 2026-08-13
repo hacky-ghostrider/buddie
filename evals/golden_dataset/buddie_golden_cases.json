@@ -1,0 +1,403 @@
+{
+  "version": "17.0",
+  "name": "buddie_golden_cases",
+  "description": "Sprint 17 Buddie golden dataset foundation for DeepEval (functional correctness, RAG/groundedness, response quality). Expected values are derived from existing employee fixtures and the sample handbook — not invented business rules.",
+  "default_session": {
+    "verified_employee_id": "E-1101",
+    "employee_name": "Avery Nguyen",
+    "department": "Engineering",
+    "designation": "Senior Software Engineer",
+    "manager": "Sam Rivera",
+    "data_source": "data/employees/employees.json",
+    "handbook_source": "data/sample/employee_handbook.md",
+    "as_of_date": "2026-08-08"
+  },
+  "cases": [
+    {
+      "id": "leave-balance-vacation-001",
+      "category": "leave_hr",
+      "user_query": "How many vacation days do I have left?",
+      "expected_answer": "You have 14 vacation days remaining.",
+      "expected_context": [
+        "employee_id=E-1101 leave_balance vacation=14 sick=8 personal=3"
+      ],
+      "expected_tool": "get_leave_balance",
+      "expected_tools": ["get_leave_balance"],
+      "expected_behavior": "answer_from_tool",
+      "evaluation_notes": "Derived from EmployeeService.get_leave_balance('E-1101') / test_primary_demo_employee_has_rich_data."
+    },
+    {
+      "id": "leave-balance-sick-002",
+      "category": "leave_hr",
+      "user_query": "What is my sick leave balance?",
+      "expected_answer": "You have 8 sick leave days remaining.",
+      "expected_context": [
+        "employee_id=E-1101 leave_balance vacation=14 sick=8 personal=3"
+      ],
+      "expected_tool": "get_leave_balance",
+      "expected_tools": ["get_leave_balance"],
+      "expected_behavior": "answer_from_tool",
+      "evaluation_notes": "Same leave_balance payload as vacation; answer must report sick=8 without inventing other balances incorrectly."
+    },
+    {
+      "id": "leave-balance-personal-003",
+      "category": "leave_hr",
+      "user_query": "How many personal leave days do I have?",
+      "expected_answer": "You have 3 personal leave days remaining.",
+      "expected_context": [
+        "employee_id=E-1101 leave_balance vacation=14 sick=8 personal=3"
+      ],
+      "expected_tool": "get_leave_balance",
+      "expected_tools": ["get_leave_balance"],
+      "expected_behavior": "answer_from_tool",
+      "evaluation_notes": "Planner routes personal-balance phrasing to get_leave_balance."
+    },
+    {
+      "id": "leave-history-2025-004",
+      "category": "leave_hr",
+      "user_query": "Show my leave history for 2025",
+      "expected_answer": "In 2025 you have 10 leave history entries totaling 22.0 days (including APPROVED and REJECTED statuses as stored). Examples include PERSONAL on 2025-02-06 (1 day, APPROVED) and VACATION on 2025-07-21 (5 days, APPROVED, Summer vacation).",
+      "expected_context": [
+        "employee_id=E-1101 year=2025 leave_history_count=10 total_days=22.0",
+        "2025-02-06 PERSONAL 1.0 APPROVED Home appointment",
+        "2025-07-21 VACATION 5.0 APPROVED Summer vacation",
+        "2025-04-01 SICK 2.0 REJECTED Flu symptoms"
+      ],
+      "expected_tool": "get_leave_history",
+      "expected_tools": ["get_leave_history"],
+      "expected_behavior": "answer_from_tool",
+      "evaluation_notes": "total_days=22.0 comes from EmployeeService.get_leave_history(E-1101, year=2025). Do not invent entries beyond the store."
+    },
+    {
+      "id": "leave-upcoming-005",
+      "category": "leave_hr",
+      "user_query": "What is my upcoming leave?",
+      "expected_answer": "Your next vacation is APPROVED from 2026-08-26 to 2026-08-30 (5.0 days). You also have a PENDING PERSONAL leave on 2026-09-22 (1.0 day).",
+      "expected_context": [
+        "upcoming_leave VACATION 2026-08-26 to 2026-08-30 status=APPROVED days=5.0",
+        "upcoming_leave PERSONAL 2026-09-22 to 2026-09-22 status=PENDING days=1.0"
+      ],
+      "expected_tool": "get_upcoming_leave",
+      "expected_tools": ["get_upcoming_leave"],
+      "expected_behavior": "answer_from_tool",
+      "evaluation_notes": "Query phrasing must include 'upcoming leave' to match RuleBasedPlanner _UPCOMING_LEAVE_HINTS."
+    },
+    {
+      "id": "leave-eligibility-ok-006",
+      "category": "leave_hr",
+      "user_query": "Am I eligible to take 3 vacation days?",
+      "expected_answer": "Yes. You are eligible to take 3 vacation day(s); available vacation balance is 14.",
+      "expected_context": [
+        "employee_id=E-1101 leave_type=VACATION requested_days=3.0 available_days=14.0 eligible=true",
+        "Eligible: 3 vacation day(s) within available balance of 14."
+      ],
+      "expected_tools": [
+        "get_employee_profile",
+        "get_leave_balance",
+        "check_leave_eligibility"
+      ],
+      "expected_behavior": "combine_tools",
+      "evaluation_notes": "Eligibility workflow from RuleBasedPlanner._plan_leave_eligibility for requested_days < 10 (no policy tool)."
+    },
+    {
+      "id": "leave-eligibility-insufficient-007",
+      "category": "leave_hr",
+      "user_query": "Can I take 30 vacation days?",
+      "expected_answer": "No. You are not eligible: requested 30 vacation day(s) but only 14 are available. Requests over 10 vacation days typically need manager approval.",
+      "expected_context": [
+        "employee_id=E-1101 leave_type=VACATION requested_days=30.0 available_days=14.0 eligible=false",
+        "Insufficient vacation balance: requested 30 day(s), available 14.",
+        "Requests over 10 vacation days typically need manager approval."
+      ],
+      "expected_tools": [
+        "get_employee_profile",
+        "get_leave_balance",
+        "check_leave_eligibility",
+        "search_company_policy"
+      ],
+      "expected_behavior": "combine_tools",
+      "evaluation_notes": "requested_days >= 10 adds search_company_policy per planner. Policy excerpt content may vary; eligibility facts must stay grounded in tool output."
+    },
+    {
+      "id": "leave-profile-008",
+      "category": "leave_hr",
+      "user_query": "Show my profile",
+      "expected_answer": "Avery Nguyen (E-1101) is a Senior Software Engineer in Engineering, reporting to Sam Rivera, located in Austin. Employment status is ACTIVE.",
+      "expected_context": [
+        "employee_id=E-1101 full_name=Avery Nguyen department=Engineering designation=Senior Software Engineer manager=Sam Rivera location=Austin employment_status=ACTIVE"
+      ],
+      "expected_tool": "get_employee_profile",
+      "expected_tools": ["get_employee_profile"],
+      "expected_behavior": "answer_from_tool",
+      "evaluation_notes": "Planner profile hint is 'my profile' / 'Show my profile'."
+    },
+    {
+      "id": "holiday-next-009",
+      "category": "holidays",
+      "user_query": "What is the next company holiday?",
+      "expected_answer": "The next company holiday is Company Foundation Day on 2026-08-14.",
+      "expected_context": [
+        "as_of_date=2026-08-08 next_holiday=Company Foundation Day date=2026-08-14 location=All"
+      ],
+      "expected_tool": "get_upcoming_holidays",
+      "expected_tools": ["get_upcoming_holidays"],
+      "expected_behavior": "answer_from_tool",
+      "evaluation_notes": "get_upcoming_holidays does not require employee verification. as_of_date is dataset seed date 2026-08-08."
+    },
+    {
+      "id": "holiday-upcoming-list-010",
+      "category": "holidays",
+      "user_query": "What holidays are coming up?",
+      "expected_answer": "Upcoming holidays include Company Foundation Day (2026-08-14), Summer Wellness Day (2026-08-21), Labor Day (2026-09-07), Thanksgiving (2026-11-26), and Christmas Day (2026-12-25).",
+      "expected_context": [
+        "Company Foundation Day 2026-08-14 All",
+        "Summer Wellness Day 2026-08-21 All",
+        "Labor Day 2026-09-07 US",
+        "Thanksgiving 2026-11-26 US",
+        "Christmas Day 2026-12-25 All"
+      ],
+      "expected_tool": "get_upcoming_holidays",
+      "expected_tools": ["get_upcoming_holidays"],
+      "expected_behavior": "answer_from_tool",
+      "evaluation_notes": "List is from EmployeeService.get_upcoming_holidays() against the seeded holiday calendar."
+    },
+    {
+      "id": "holiday-calendar-us-2026-011",
+      "category": "holidays",
+      "user_query": "Show me the US holiday calendar for 2026",
+      "expected_answer": "The 2026 US/company holiday calendar includes 8 holidays, among them New Year's Day (2026-01-01), Memorial Day (2026-05-25), Independence Day (2026-07-03), Company Foundation Day (2026-08-14), Summer Wellness Day (2026-08-21), Labor Day (2026-09-07), Thanksgiving (2026-11-26), and Christmas Day (2026-12-25).",
+      "expected_context": [
+        "country=US year=2026 holiday_count=8",
+        "Independence Day 2026-07-03 US",
+        "Labor Day 2026-09-07 US",
+        "Company Foundation Day 2026-08-14 All"
+      ],
+      "expected_tool": "get_holiday_calendar",
+      "expected_tools": ["get_holiday_calendar"],
+      "expected_behavior": "answer_from_tool",
+      "evaluation_notes": "Independence Day is stored as 2026-07-03 in the seeded dataset (not 2026-07-04)."
+    },
+    {
+      "id": "holiday-labor-day-012",
+      "category": "holidays",
+      "user_query": "When is Labor Day 2026 on the holiday calendar?",
+      "expected_answer": "Labor Day is on 2026-09-07 (US) on the company holiday calendar.",
+      "expected_context": [
+        "Labor Day 2026-09-07 US"
+      ],
+      "expected_tool": "get_holiday_calendar",
+      "expected_tools": ["get_holiday_calendar"],
+      "expected_behavior": "answer_from_tool",
+      "evaluation_notes": "Query includes 'holiday calendar' so planner selects get_holiday_calendar rather than unsupported routing."
+    },
+    {
+      "id": "policy-leave-handbook-013",
+      "category": "benefits_policies",
+      "user_query": "What is the company leave policy for vacation?",
+      "expected_answer": "Employees accrue paid leave per the handbook policy. Full-time employees earn vacation based on tenure; unused vacation may roll over within the annual HR cap. Vacation requires manager approval and advance notice (preferably at least two weeks via the HR portal).",
+      "expected_context": [
+        "Employees accrue paid leave per the handbook policy. Full-time employees earn vacation days based on tenure. Unused vacation may roll over within the annual cap defined by HR.",
+        "Vacation requires manager approval and advance notice. Submit requests in the HR portal at least two weeks before the leave start date when possible."
+      ],
+      "expected_tools": ["search_docs", "summarize"],
+      "expected_behavior": "answer_from_rag",
+      "evaluation_notes": "Knowledge route via search_docs+summarize. expected_context is excerpted from data/sample/employee_handbook.md."
+    },
+    {
+      "id": "policy-parental-handbook-014",
+      "category": "benefits_policies",
+      "user_query": "I need parental leave information from the handbook",
+      "expected_answer": "Sick leave, parental leave, and bereavement leave follow the eligibility rules in the handbook. Contact HR for questions about accruals or exceptions.",
+      "expected_context": [
+        "Sick leave, parental leave, and bereavement leave follow the eligibility rules in this handbook. Contact HR for questions about accruals or exceptions."
+      ],
+      "expected_tools": ["search_docs", "summarize"],
+      "expected_behavior": "answer_from_rag",
+      "evaluation_notes": "Handbook mentions parental leave only at this high level; answers must not invent durations or pay percentages."
+    },
+    {
+      "id": "policy-benefits-limited-015",
+      "category": "benefits_policies",
+      "user_query": "What employee benefits does the company offer?",
+      "expected_answer": "[ANSWER_NOT_FULLY_SPECIFIED] The sample handbook primarily covers leave policy and Buddie identity. A grounded answer should only restate leave/PTO-related benefits present in retrieved context and must not invent medical, dental, 401(k), or stipend details.",
+      "expected_context": [
+        "Employees accrue paid leave per the handbook policy.",
+        "You are chatting with Buddie, the AI Employee Assistant. Buddie answers questions about work, leave, benefits, and company policies using company knowledge and, when appropriate, your verified employee information."
+      ],
+      "expected_tools": ["search_docs", "summarize"],
+      "expected_behavior": "answer_from_rag",
+      "evaluation_notes": "Corpus coverage is thin for 'benefits'. Marked ANSWER_NOT_FULLY_SPECIFIED so future G-Eval / faithfulness judges prefer refusal-of-invention over fabricated benefit catalogs."
+    },
+    {
+      "id": "rag-summarize-leave-policy-016",
+      "category": "rag_knowledge",
+      "user_query": "Summarize the leave policy from the employee handbook.",
+      "expected_answer": "The employee handbook leave policy covers paid time off accrual, vacation carry-forward (up to 5 unused vacation days), manager approval and advance notice for vacation, and related leave types (sick, parental, bereavement) with HR as the escalation path.",
+      "expected_context": [
+        "Employees accrue paid leave per the handbook policy. Full-time employees earn vacation days based on tenure. Unused vacation may roll over within the annual cap defined by HR.",
+        "Unused vacation days may be carried forward into the next calendar year up to a maximum of 5 days. Balances above the cap are forfeited unless an exception is approved by HR. Sick leave and personal leave do not carry forward.",
+        "Vacation requires manager approval and advance notice. Submit requests in the HR portal at least two weeks before the leave start date when possible."
+      ],
+      "expected_tools": ["search_docs", "summarize"],
+      "expected_behavior": "answer_from_rag",
+      "evaluation_notes": "Canonical knowledge scenario aligned with datasets/agent-tools-foundation-001.json tool pair, but grounded in the real sample handbook text."
+    },
+    {
+      "id": "rag-carry-forward-cap-017",
+      "category": "rag_knowledge",
+      "user_query": "What does the employee handbook say is the vacation carry-forward maximum?",
+      "expected_answer": "Unused vacation days may be carried forward into the next calendar year up to a maximum of 5 days. Balances above the cap are forfeited unless an HR exception is approved. Sick leave and personal leave do not carry forward.",
+      "expected_context": [
+        "Unused vacation days may be carried forward into the next calendar year up to a maximum of 5 days. Balances above the cap are forfeited unless an exception is approved by HR. Sick leave and personal leave do not carry forward."
+      ],
+      "expected_tools": ["search_docs", "summarize"],
+      "expected_behavior": "answer_from_rag",
+      "evaluation_notes": "Wording keeps the knowledge/handbook path (not hybrid personal-balance). Exact numeric cap (5 days) is handbook-grounded — strong Faithfulness / Contextual Recall case."
+    },
+    {
+      "id": "rag-notice-requirement-018",
+      "category": "rag_knowledge",
+      "user_query": "What does the employee handbook say about vacation approval and notice?",
+      "expected_answer": "Vacation requires manager approval and advance notice. Submit requests in the HR portal at least two weeks before the leave start date when possible. Emergency leave should be reported as soon as practical.",
+      "expected_context": [
+        "Vacation requires manager approval and advance notice. Submit requests in the HR portal at least two weeks before the leave start date when possible. Emergency leave should be reported as soon as practical."
+      ],
+      "expected_tools": ["search_docs", "summarize"],
+      "expected_behavior": "answer_from_rag",
+      "evaluation_notes": "Wording includes 'employee handbook' to stay on the knowledge/RAG path rather than leave-balance heuristics."
+    },
+    {
+      "id": "rag-buddie-identity-019",
+      "category": "rag_knowledge",
+      "user_query": "What does the handbook say Buddie is?",
+      "expected_answer": "Buddie is the AI Employee Assistant. It answers questions about work, leave, benefits, and company policies using company knowledge and, when appropriate, verified employee information.",
+      "expected_context": [
+        "You are chatting with Buddie, the AI Employee Assistant. Buddie answers questions about work, leave, benefits, and company policies using company knowledge and, when appropriate, your verified employee information."
+      ],
+      "expected_tools": ["search_docs", "summarize"],
+      "expected_behavior": "answer_from_rag",
+      "evaluation_notes": "Identity section of employee_handbook.md. Prefer this over bare 'Who are you?' which is conversational and may bypass RAG."
+    },
+    {
+      "id": "multi-carry-forward-020",
+      "category": "multi_tool",
+      "user_query": "Can I carry forward my remaining vacation days?",
+      "expected_answer": "You currently have 14 vacation days remaining. Per handbook policy, unused vacation may be carried forward up to a maximum of 5 days into the next calendar year; amounts above the cap are forfeited unless HR approves an exception. Sick and personal leave do not carry forward.",
+      "expected_context": [
+        "employee_id=E-1101 leave_balance vacation=14 sick=8 personal=3",
+        "Unused vacation days may be carried forward into the next calendar year up to a maximum of 5 days. Balances above the cap are forfeited unless an exception is approved by HR. Sick leave and personal leave do not carry forward."
+      ],
+      "expected_tools": ["get_leave_balance", "search_company_policy"],
+      "expected_behavior": "combine_tools",
+      "evaluation_notes": "Hybrid route from RuleBasedPlanner._plan_hybrid_leave_and_policy. Answer must combine personal balance with policy — not invent a different carry-forward cap."
+    },
+    {
+      "id": "multi-manager-holidays-021",
+      "category": "multi_tool",
+      "user_query": "Who is my manager and what holidays are coming up?",
+      "expected_answer": "Your manager is Sam Rivera. Upcoming holidays on the calendar include Company Foundation Day (2026-08-14), Summer Wellness Day (2026-08-21), Labor Day (2026-09-07), Thanksgiving (2026-11-26), and Christmas Day (2026-12-25).",
+      "expected_context": [
+        "employee_id=E-1101 manager=Sam Rivera department=Engineering",
+        "Company Foundation Day 2026-08-14",
+        "Labor Day 2026-09-07",
+        "Christmas Day 2026-12-25"
+      ],
+      "expected_tools": ["get_manager_information", "get_holiday_calendar"],
+      "expected_behavior": "combine_tools",
+      "evaluation_notes": "Matches tests/test_multi_tool_agent.py::test_manager_and_holiday_workflow."
+    },
+    {
+      "id": "multi-eligibility-with-policy-022",
+      "category": "multi_tool",
+      "user_query": "Can I take 10 vacation days according to policy?",
+      "expected_answer": "Yes for balance: 10 vacation days are within your available balance of 14. Because the request is 10 days, policy context is also retrieved; note that requests over 10 vacation days typically need manager approval.",
+      "expected_context": [
+        "employee_id=E-1101 leave_type=VACATION requested_days=10.0 available_days=14.0 eligible=true",
+        "Requests over 10 vacation days typically need manager approval."
+      ],
+      "expected_tools": [
+        "get_employee_profile",
+        "get_leave_balance",
+        "check_leave_eligibility",
+        "search_company_policy"
+      ],
+      "expected_behavior": "combine_tools",
+      "evaluation_notes": "Planner includes search_company_policy when days >= 10 or query contains 'policy'. Exact policy chunk text may vary; eligibility numbers must not drift."
+    },
+    {
+      "id": "multi-leave-request-hitl-023",
+      "category": "multi_tool",
+      "user_query": "I want to request 3 vacation days starting 2026-10-01",
+      "expected_answer": "Eligibility is checked first (3 vacation days against balance 14). Buddie must ask for explicit human confirmation before calling create_leave_request; the draft turn must not write the leave request yet.",
+      "expected_context": [
+        "employee_id=E-1101 leave_type=VACATION requested_days=3.0 available_days=14.0 eligible=true",
+        "awaiting_confirmation=true pending_action_type=create_leave_request"
+      ],
+      "expected_tools": [
+        "get_employee_profile",
+        "get_leave_balance",
+        "check_leave_eligibility"
+      ],
+      "expected_behavior": "require_hitl_confirmation",
+      "evaluation_notes": "create_leave_request must NOT appear on the draft turn. HITL preserved per Sprint 14/15 contracts and test_leave_request_requires_human_confirmation."
+    },
+    {
+      "id": "negative-external-ceo-024",
+      "category": "negative_unknown",
+      "user_query": "What is the CEO salary of Apple?",
+      "expected_answer": "I don't have that information in Buddie's company knowledge or employee tools. I can help with leave, holidays, and company policy questions instead.",
+      "expected_context": [],
+      "expected_tools": [],
+      "expected_behavior": "refuse_or_insufficient",
+      "evaluation_notes": "Planner routes to unsupported. Hallucinated external facts fail Faithfulness / response-quality goals."
+    },
+    {
+      "id": "negative-unverified-balance-025",
+      "category": "negative_unknown",
+      "user_query": "How many vacation days do I have left?",
+      "expected_answer": "Before I access your employee information, I need to verify your employee ID. Please enter your employee ID, for example E-1101.",
+      "expected_context": [],
+      "expected_tools": [],
+      "expected_behavior": "require_verification",
+      "evaluation_notes": "Same wording as leave-balance-vacation-001 but WITHOUT verified session. Session override: verified_employee_id=null. Must not return Avery Nguyen balances."
+    },
+    {
+      "id": "negative-unsupported-stipend-026",
+      "category": "negative_unknown",
+      "user_query": "What is our remote work stipend amount for pets?",
+      "expected_answer": "[ANSWER_NOT_IN_CORPUS] The sample handbook and employee tools do not define a pet stipend. Buddie should say it does not have that information rather than inventing a dollar amount.",
+      "expected_context": [
+        "You are chatting with Buddie, the AI Employee Assistant. Buddie answers questions about work, leave, benefits, and company policies using company knowledge and, when appropriate, your verified employee information."
+      ],
+      "expected_tools": ["search_docs", "summarize"],
+      "expected_behavior": "refuse_or_insufficient",
+      "evaluation_notes": "Planner currently still selects knowledge tools for this phrasing. Evaluation focus is grounded refusal / no invented stipend — not tool routing perfection."
+    },
+    {
+      "id": "negative-no-invented-holiday-027",
+      "category": "negative_unknown",
+      "user_query": "Is Diwali an official company holiday in our US calendar for 2026?",
+      "expected_answer": "Diwali is not listed in the seeded 2026 US/company holiday calendar returned by get_holiday_calendar. Buddie should not invent it as an official holiday.",
+      "expected_context": [
+        "country=US year=2026 holidays=New Year's Day, Memorial Day, Independence Day, Company Foundation Day, Summer Wellness Day, Labor Day, Thanksgiving, Christmas Day"
+      ],
+      "expected_tool": "get_holiday_calendar",
+      "expected_tools": ["get_holiday_calendar"],
+      "expected_behavior": "refuse_or_insufficient",
+      "evaluation_notes": "Groundedness negative: absence in tool output must remain absence in the answer."
+    },
+    {
+      "id": "multi-sick-carry-forward-028",
+      "category": "multi_tool",
+      "user_query": "Does sick leave carry forward?",
+      "expected_answer": "You currently have 8 sick leave days. Per handbook policy, sick leave and personal leave do not carry forward; only unused vacation may carry forward up to 5 days.",
+      "expected_context": [
+        "employee_id=E-1101 leave_balance vacation=14 sick=8 personal=3",
+        "Sick leave and personal leave do not carry forward."
+      ],
+      "expected_tools": ["get_leave_balance", "search_company_policy"],
+      "expected_behavior": "combine_tools",
+      "evaluation_notes": "Hybrid route via carry-forward hints. Strong groundedness case for 'do not carry forward'."
+    }
+  ]
+}

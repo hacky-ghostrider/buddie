@@ -1,0 +1,2 @@
+example_count,pass_rate,overall_average_score,average_faithfulness,average_hallucination,average_relevancy,average_context_precision,average_context_recall,average_latency_ms,average_cost_usd
+1,1.0,0.91,0.92,0.92,0.9,0.88,0.85,120.0,0.002

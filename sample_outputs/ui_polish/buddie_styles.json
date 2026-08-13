@@ -1,0 +1,52 @@
+{
+  "brandText": "Buddie",
+  "brandColor": "rgb(15, 118, 110)",
+  "brandSize": "32px",
+  "subText": "AI Employee Assistant",
+  "subColor": "rgb(100, 116, 139)",
+  "welcomeBrand": "Buddie",
+  "welcomeBrandColor": "rgb(15, 118, 110)",
+  "welcomeSub": "AI Employee Assistant",
+  "welcomeText": "How can I help you today?",
+  "welcomeColor": "rgb(22, 50, 58)",
+  "appBg": "rgb(244, 251, 250)",
+  "chatBorder": "rgb(217, 231, 229)",
+  "chatBg": "rgb(255, 255, 255)",
+  "sendBg": "rgb(15, 118, 110)",
+  "sendColor": "rgb(255, 255, 255)",
+  "sendOpacity": "0.45",
+  "pills": [
+    {
+      "text": "My leave",
+      "bg": "rgb(255, 255, 255)",
+      "border": "rgb(217, 231, 229)",
+      "color": "rgb(22, 50, 58)",
+      "testid": null,
+      "kind": null
+    },
+    {
+      "text": "Leave history",
+      "bg": "rgb(255, 255, 255)",
+      "border": "rgb(217, 231, 229)",
+      "color": "rgb(22, 50, 58)",
+      "testid": null,
+      "kind": null
+    },
+    {
+      "text": "Upcoming holidays",
+      "bg": "rgb(255, 255, 255)",
+      "border": "rgb(217, 231, 229)",
+      "color": "rgb(22, 50, 58)",
+      "testid": null,
+      "kind": null
+    },
+    {
+      "text": "Pending actions",
+      "bg": "rgb(255, 255, 255)",
+      "border": "rgb(217, 231, 229)",
+      "color": "rgb(22, 50, 58)",
+      "testid": null,
+      "kind": null
+    }
+  ]
+}

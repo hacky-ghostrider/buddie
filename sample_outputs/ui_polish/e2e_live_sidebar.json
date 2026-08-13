@@ -1,0 +1,48 @@
+{
+  "url": "http://localhost:8501",
+  "steps": [
+    {
+      "name": "home_loaded",
+      "has_welcome": true,
+      "sidebar_visible_before": false
+    },
+    {
+      "name": "submitted_verification",
+      "employee_id": "E-1101"
+    },
+    {
+      "name": "post_verify_sidebar_open",
+      "sidebar_visible": true,
+      "found_labels": [
+        "My Leave",
+        "Leave History",
+        "Upcoming Holidays",
+        "Pending Actions",
+        "Employee Profile"
+      ],
+      "missing_labels": [],
+      "has_workspace_header_button": true
+    },
+    {
+      "name": "after_manual_collapse",
+      "collapsed": true,
+      "expand_control_visible": false,
+      "sidebar_visible": false
+    },
+    {
+      "name": "after_reopen",
+      "reopen_via": "workspace_header_button",
+      "sidebar_visible": true,
+      "found_labels": [
+        "My Leave",
+        "Leave History",
+        "Upcoming Holidays",
+        "Pending Actions",
+        "Employee Profile"
+      ],
+      "missing_labels": []
+    }
+  ],
+  "passed": true,
+  "screenshot": "D:\\RAG-DEMO\\sample_outputs\\ui_polish\\e2e_live_sidebar.png"
+}

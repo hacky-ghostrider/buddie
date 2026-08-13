@@ -1,0 +1,51 @@
+{
+  "version": "1.0",
+  "description": "Golden dataset for offline RAG / agent evaluation automation",
+  "examples": [
+    {
+      "id": "rag-chunking-001",
+      "question": "What is recursive character chunking?",
+      "expected_answer": "Recursive character chunking splits text using a hierarchy of separators such as paragraphs, lines, spaces, and characters while preserving overlap between adjacent chunks.",
+      "expected_sources": ["guide.pdf"],
+      "expected_tools": [],
+      "expected_tool_arguments": [],
+      "expected_tool_order": [],
+      "difficulty": "easy",
+      "category": "rag",
+      "tags": ["chunking", "ingestion"]
+    },
+    {
+      "id": "rag-retrieval-001",
+      "question": "Why does retrieval return similarity scores?",
+      "expected_answer": "Similarity scores rank retrieved chunks so the system can apply top-k selection and score thresholds, and so evaluation can measure retrieval quality.",
+      "expected_sources": ["retrieval.md"],
+      "expected_tools": [],
+      "expected_tool_arguments": [],
+      "expected_tool_order": [],
+      "difficulty": "medium",
+      "category": "retrieval",
+      "tags": ["retrieval", "scoring"]
+    },
+    {
+      "id": "agent-tools-foundation-001",
+      "question": "Summarize the leave policy from the employee handbook.",
+      "expected_answer": "The employee handbook leave policy defines paid time off eligibility, accrual, approval workflow, and notice requirements for vacation and related leave types.",
+      "expected_sources": ["employee_handbook.pdf"],
+      "expected_tools": ["search_docs", "summarize"],
+      "expected_tool_arguments": [
+        {"query": "leave policy employee handbook"},
+        {"document": "employee_handbook.pdf"}
+      ],
+      "expected_tool_order": ["search_docs", "summarize"],
+      "difficulty": "hard",
+      "category": "agent_foundation",
+      "tags": ["tools", "canonical", "langsmith-reference", "future-agent"],
+      "metadata": {
+        "scenario": "agent-tools-foundation-001",
+        "canonical_dataset": "datasets/agent-tools-foundation-001.json",
+        "sprint_10_2_actual_tools": [],
+        "sprint_11_actual_tools": ["search_docs", "summarize"]
+      }
+    }
+  ]
+}

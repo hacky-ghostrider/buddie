@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Sample Evaluation Report — agent-tools-foundation-001</title>
+  <style>
+    body { font-family: Georgia, serif; margin: 2rem; color: #1a1a1a; background: #f7f5f1; }
+    h1 { font-size: 1.6rem; }
+    .pass { color: #1b7f4e; font-weight: bold; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; background: #fff; }
+    th, td { border: 1px solid #ddd; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #eee; }
+  </style>
+</head>
+<body>
+  <h1>Evaluation Report (sample)</h1>
+  <p>Scenario: <code>agent-tools-foundation-001</code></p>
+  <p>Status: <span class="pass">PASSED</span> — overall score 0.91</p>
+  <p>Tools: search_docs → summarize (validation passed)</p>
+  <p>LangSmith: <a href="https://smith.langchain.com/public/example-demo-trace">example demo trace</a></p>
+  <table>
+    <thead><tr><th>Metric</th><th>Score</th><th>Passed</th></tr></thead>
+    <tbody>
+      <tr><td>faithfulness</td><td>0.92</td><td>yes</td></tr>
+      <tr><td>hallucination</td><td>0.92</td><td>yes</td></tr>
+      <tr><td>answer_relevancy</td><td>0.90</td><td>yes</td></tr>
+      <tr><td>contextual_precision</td><td>0.88</td><td>yes</td></tr>
+      <tr><td>contextual_recall</td><td>0.85</td><td>yes</td></tr>
+    </tbody>
+  </table>
+  <p><em>Generated sample for README / interview browsing. Run <code>make demo</code> for live artifacts.</em></p>
+</body>
+</html>

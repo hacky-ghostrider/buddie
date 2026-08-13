@@ -1,0 +1,35 @@
+name: PyTest
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  test:
+    name: Unit & Integration (mocked vendors)
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: test
+      ENABLE_LANGSMITH: "false"
+      ENABLE_DEEPEVAL: "false"
+      QUALITY_GATE_ENABLED: "true"
+      OPENAI_API_KEY: ""
+      LANGSMITH_API_KEY: ""
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run PyTest
+        run: pytest -q --tb=short

@@ -1,0 +1,45 @@
+name: Evaluation Runner
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  evaluate:
+    name: Dry-run evaluation automation
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: ci
+      ENABLE_LANGSMITH: "false"
+      ENABLE_DEEPEVAL: "false"
+      ENABLE_TOOL_VALIDATION: "true"
+      REPORT_DIRECTORY: ./data/reports
+      BENCHMARK_DIRECTORY: ./data/benchmarks
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Create output directories
+        run: mkdir -p data/reports data/benchmarks
+
+      - name: Run evaluation (dry-run, no live APIs)
+        run: python scripts/run_evaluation.py --batch --dry-run --run-name ci_evaluation
+
+      - name: Upload evaluation artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-reports
+          path: data/reports/ci_evaluation.*
+          if-no-files-found: error

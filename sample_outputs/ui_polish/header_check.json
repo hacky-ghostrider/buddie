@@ -1,0 +1,15 @@
+{
+  "titleText": "Buddie",
+  "titleTop": 61,
+  "titleBottom": 94,
+  "titleHeight": 33,
+  "titleFont": "23.2px",
+  "titleColor": "rgb(15, 118, 110)",
+  "titleClippedTop": false,
+  "titleFullyVisible": true,
+  "captions": [
+    "AI Employee Assistant"
+  ],
+  "welcomeText": "Buddie",
+  "welcomeTop": 131
+}

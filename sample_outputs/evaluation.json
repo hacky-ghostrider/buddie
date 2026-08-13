@@ -1,0 +1,29 @@
+{
+  "reports": [
+    {
+      "question": "Summarize the leave policy from the employee handbook.",
+      "expected_answer": "The employee handbook leave policy defines paid time off eligibility, accrual, approval workflow, and notice requirements for vacation and related leave types.",
+      "answer": "The employee handbook leave policy defines paid time off eligibility, accrual, approval workflow, and notice requirements for vacation and related leave types.",
+      "overall_score": 0.91,
+      "passed": true,
+      "metrics": [
+        {"name": "faithfulness", "score": 0.92, "passed": true},
+        {"name": "hallucination", "score": 0.92, "passed": true},
+        {"name": "answer_relevancy", "score": 0.9, "passed": true},
+        {"name": "contextual_precision", "score": 0.88, "passed": true},
+        {"name": "contextual_recall", "score": 0.85, "passed": true}
+      ],
+      "tool_validation": {
+        "passed": true,
+        "expected_tools": ["search_docs", "summarize"],
+        "actual_tools": ["search_docs", "summarize"],
+        "failures": []
+      },
+      "langsmith_run_url": "https://smith.langchain.com/public/example-demo-trace",
+      "metadata": {
+        "scenario": "agent-tools-foundation-001",
+        "correlation_id": "sample-output-001"
+      }
+    }
+  ]
+}

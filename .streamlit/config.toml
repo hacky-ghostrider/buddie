@@ -1,0 +1,53 @@
+# Buddie — Light Ocean Lagoon / Aqua theme (presentation only)
+# Tokens:
+#   Background #F4FBFA | Primary #0F766E | Secondary #14B8A6 | Accent #22D3EE
+#   Surface #FFFFFF | Text #16323A | Muted #64748B | Border #D9E7E5
+
+[theme]
+base = "light"
+primaryColor = "#0F766E"
+backgroundColor = "#F4FBFA"
+secondaryBackgroundColor = "#FFFFFF"
+codeBackgroundColor = "#E8F6F4"
+textColor = "#16323A"
+linkColor = "#0F766E"
+borderColor = "#D9E7E5"
+dataframeBorderColor = "#D9E7E5"
+dataframeHeaderBackgroundColor = "#E8F6F4"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "12px"
+buttonRadius = "12px"
+font = "'Source Sans 3':https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap"
+headingFont = "'Source Sans 3':https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@600;700&display=swap"
+codeFont = "'IBM Plex Mono':https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap"
+baseFontSize = 16
+baseFontWeight = 400
+headingFontSizes = ["2.1rem", "1.55rem", "1.3rem", "1.1rem", "1rem", "0.9rem"]
+headingFontWeights = [700, 600, 600, 600, 600, 600]
+linkUnderline = false
+blueColor = "#0F766E"
+greenColor = "#0F766E"
+redColor = "#CF222E"
+orangeColor = "#BF8700"
+grayColor = "#64748B"
+greenBackgroundColor = "#D1FAF5"
+greenTextColor = "#0F766E"
+blueBackgroundColor = "#E0F7FA"
+blueTextColor = "#0F766E"
+orangeBackgroundColor = "#FFF4D5"
+orangeTextColor = "#8A6D00"
+redBackgroundColor = "#FFE8E6"
+redTextColor = "#A40E26"
+
+[theme.sidebar]
+backgroundColor = "#F4FBFA"
+secondaryBackgroundColor = "#FFFFFF"
+primaryColor = "#0F766E"
+borderColor = "#D9E7E5"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

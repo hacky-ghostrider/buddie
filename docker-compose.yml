@@ -1,0 +1,292 @@
+# Buddie — local development & Sprint 16 multi-container stack
+#
+# Default (UI + API + MCP): docker compose up --build
+# MCP HTTP mode:            BUDDIE_TOOL_MODE=mcp MCP_TRANSPORT=http docker compose up --build
+# Legacy single API:        docker compose --profile legacy up --build api
+# Development hot-reload:   docker compose --profile dev up --build
+# Production-like API:      docker compose --profile prod up --build -d
+
+services:
+  # ---------------------------------------------------------------------------
+  # Sprint 16 — three-service stack (UI → API → MCP HTTP)
+  # ---------------------------------------------------------------------------
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: buddie-mcp:1.0.0
+    container_name: buddie-mcp-server
+    command:
+      [
+        "python",
+        "-m",
+        "app.mcp",
+        "--transport",
+        "streamable-http",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8100",
+      ]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      FASTMCP_HOST: "0.0.0.0"
+      FASTMCP_PORT: "8100"
+      # Optional DNS-rebinding allow-list (comma-separated). Empty = disabled for
+      # non-loopback binds so Docker service Host headers work.
+      MCP_ALLOWED_HOSTS: ${MCP_ALLOWED_HOSTS:-}
+      EMPLOYEE_DATA_PATH: /data/employees/employees.json
+    ports:
+      - "${MCP_PORT:-8100}:8100"
+    volumes:
+      - employee_data:/data/employees
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import socket; s=socket.create_connection(('127.0.0.1',8100),2); s.close()",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  buddie-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: buddie-api:1.0.0
+    container_name: buddie-api
+    ports:
+      - "${PORT:-8000}:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      HOST: 0.0.0.0
+      PORT: 8000
+      CHROMA_PERSIST_DIRECTORY: /data/chroma
+      REPORT_DIRECTORY: /data/reports
+      BENCHMARK_DIRECTORY: /data/benchmarks
+      QUALITY_REPORT_DIRECTORY: /data/quality_reports
+      BENCHMARK_HISTORY_PATH: /data/benchmarks/history.json
+      EMPLOYEE_DATA_PATH: /data/employees/employees.json
+      ENABLE_LANGSMITH: ${ENABLE_LANGSMITH:-false}
+      ENABLE_DEEPEVAL: ${ENABLE_DEEPEVAL:-true}
+      QUALITY_GATE_ENABLED: ${QUALITY_GATE_ENABLED:-true}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
+      # Direct remains default; set BUDDIE_TOOL_MODE=mcp MCP_TRANSPORT=http for MCP HTTP
+      BUDDIE_TOOL_MODE: ${BUDDIE_TOOL_MODE:-direct}
+      MCP_TRANSPORT: ${MCP_TRANSPORT:-memory}
+      MCP_SERVER_URL: ${MCP_SERVER_URL:-http://mcp-server:8100/mcp}
+      MCP_TIMEOUT_SECONDS: ${MCP_TIMEOUT_SECONDS:-30}
+    volumes:
+      - chroma_data:/data/chroma
+      - reports_data:/data/reports
+      - benchmarks_data:/data/benchmarks
+      - quality_reports_data:/data/quality_reports
+      - employee_data:/data/employees
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  buddie-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: buddie-ui:1.0.0
+    container_name: buddie-ui
+    command:
+      [
+        "streamlit",
+        "run",
+        "frontend/app.py",
+        "--server.address",
+        "0.0.0.0",
+        "--server.port",
+        "8501",
+        "--browser.gatherUsageStats",
+        "false",
+      ]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Streamlit talks to the API over the Compose network (not browser localhost).
+      API_BASE_URL: ${API_BASE_URL:-http://buddie-api:8000}
+      API_TIMEOUT_SECONDS: ${API_TIMEOUT_SECONDS:-120}
+      STREAMLIT_PORT: 8501
+    ports:
+      - "${STREAMLIT_PORT:-8501}:8501"
+    depends_on:
+      buddie-api:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Legacy single-service API (pre–Sprint 16) — docker compose --profile legacy up api
+  # ---------------------------------------------------------------------------
+  api:
+    profiles: ["legacy"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rag-evaluation-platform:1.0.0
+    container_name: rag-api
+    ports:
+      - "${PORT:-8000}:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      HOST: 0.0.0.0
+      PORT: 8000
+      CHROMA_PERSIST_DIRECTORY: /data/chroma
+      REPORT_DIRECTORY: /data/reports
+      BENCHMARK_DIRECTORY: /data/benchmarks
+      QUALITY_REPORT_DIRECTORY: /data/quality_reports
+      BENCHMARK_HISTORY_PATH: /data/benchmarks/history.json
+      ENABLE_LANGSMITH: ${ENABLE_LANGSMITH:-false}
+      ENABLE_DEEPEVAL: ${ENABLE_DEEPEVAL:-true}
+      QUALITY_GATE_ENABLED: ${QUALITY_GATE_ENABLED:-true}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
+      BUDDIE_TOOL_MODE: ${BUDDIE_TOOL_MODE:-direct}
+      MCP_TRANSPORT: ${MCP_TRANSPORT:-memory}
+    volumes:
+      - chroma_data:/data/chroma
+      - reports_data:/data/reports
+      - benchmarks_data:/data/benchmarks
+      - quality_reports_data:/data/quality_reports
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  api-dev:
+    profiles: ["dev"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rag-evaluation-platform:1.0.0-dev
+    container_name: rag-api-dev
+    ports:
+      - "${PORT:-8000}:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      APP_ENV: development
+      APP_DEBUG: "true"
+      HOST: 0.0.0.0
+      PORT: 8000
+      CHROMA_PERSIST_DIRECTORY: /data/chroma
+      REPORT_DIRECTORY: /data/reports
+      BENCHMARK_DIRECTORY: /data/benchmarks
+      QUALITY_REPORT_DIRECTORY: /data/quality_reports
+      BENCHMARK_HISTORY_PATH: /data/benchmarks/history.json
+      BUDDIE_TOOL_MODE: ${BUDDIE_TOOL_MODE:-direct}
+      MCP_TRANSPORT: ${MCP_TRANSPORT:-memory}
+    volumes:
+      - ./app:/app/app
+      - ./datasets:/app/datasets
+      - ./scripts:/app/scripts
+      - chroma_data:/data/chroma
+      - reports_data:/data/reports
+      - benchmarks_data:/data/benchmarks
+      - quality_reports_data:/data/quality_reports
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+      ]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  api-prod:
+    profiles: ["prod"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rag-evaluation-platform:1.0.0
+    container_name: rag-api-prod
+    ports:
+      - "${PORT:-8000}:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      LOG_LEVEL: INFO
+      HOST: 0.0.0.0
+      PORT: 8000
+      CHROMA_PERSIST_DIRECTORY: /data/chroma
+      REPORT_DIRECTORY: /data/reports
+      BENCHMARK_DIRECTORY: /data/benchmarks
+      QUALITY_REPORT_DIRECTORY: /data/quality_reports
+      BENCHMARK_HISTORY_PATH: /data/benchmarks/history.json
+      ENABLE_LANGSMITH: ${ENABLE_LANGSMITH:-false}
+      ENABLE_DEEPEVAL: ${ENABLE_DEEPEVAL:-true}
+      QUALITY_GATE_ENABLED: ${QUALITY_GATE_ENABLED:-true}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
+      BUDDIE_TOOL_MODE: ${BUDDIE_TOOL_MODE:-direct}
+      MCP_TRANSPORT: ${MCP_TRANSPORT:-memory}
+    volumes:
+      - chroma_data:/data/chroma
+      - reports_data:/data/reports
+      - benchmarks_data:/data/benchmarks
+      - quality_reports_data:/data/quality_reports
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+volumes:
+  chroma_data:
+    name: rag-chroma-data
+  reports_data:
+    name: rag-reports-data
+  benchmarks_data:
+    name: rag-benchmarks-data
+  quality_reports_data:
+    name: rag-quality-reports-data
+  employee_data:
+    name: buddie-employee-data

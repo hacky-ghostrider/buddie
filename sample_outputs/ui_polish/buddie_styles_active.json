@@ -1,0 +1,18 @@
+{
+  "sendDisabled": false,
+  "sendBg": "rgb(15, 118, 110)",
+  "sendBorder": "rgb(15, 118, 110)",
+  "sendColor": "rgb(255, 255, 255)",
+  "chatBorder": "rgb(15, 118, 110)",
+  "brandColor": "rgb(15, 118, 110)",
+  "markBg": "linear-gradient(135deg, rgb(20, 184, 166), rgb(34, 211, 238))",
+  "pill0": {
+    "text": "My leave",
+    "bg": "rgb(255, 255, 255)",
+    "border": "rgb(217, 231, 229)",
+    "color": "rgb(22, 50, 58)",
+    "ariaPressed": null,
+    "className": "st-emotion-cache-xij161 ewrlt5x27",
+    "outer": "<button data-variant=\"pills\" class=\"st-emotion-cache-xij161 ewrlt5x27\" data-rac=\"\" type=\"button\" tabindex=\"0\" data-react-aria-pressable=\"true\" role=\"radio\" aria-checked=\"false\"><div class=\"st-emotion-cache-1lads1q ewrlt5x22\"><span data-has-shortcut=\"false\" class=\"st-emotion-cache-1kl7f1u ewrlt5x23\">"
+  }
+}

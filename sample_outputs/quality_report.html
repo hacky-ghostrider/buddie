@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Sample Quality Report</title>
+  <style>
+    body { font-family: Georgia, serif; margin: 2rem; color: #1a1a1a; background: #f7f5f1; }
+    .status { font-size: 1.4rem; color: #1b7f4e; font-weight: bold; }
+    ul { line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>Quality Gate Report (sample)</h1>
+  <p class="status">PASS</p>
+  <p>Reason: All configured quality rules satisfied.</p>
+  <p>Correlation id: <code>sample-output-001</code></p>
+  <h2>Checks</h2>
+  <ul>
+    <li>Faithfulness ≥ 0.7</li>
+    <li>Hallucination ≤ 0.3 (vendor raw) / normalized score OK</li>
+    <li>Answer relevancy ≥ 0.7</li>
+    <li>Tool validation passed</li>
+    <li>Latency / cost within budget</li>
+  </ul>
+  <p>Recommendations: none</p>
+  <p><em>Sample artifact. Produce fresh reports with <code>make demo</code> or <code>make quality-gate</code>.</em></p>
+</body>
+</html>

@@ -1,0 +1,92 @@
+﻿http_ok 200 title_buddie False len 10951
+tabs [
+  {
+    "title": "Chrome Web Store Payments",
+    "url": "chrome-extension://nmmhkkegccagdldgiimedpiccmgmieda/_generated_background_page.html",
+    "type": "background_page"
+  },
+  {
+    "title": "Google Hangouts",
+    "url": "chrome-extension://nkeimhogjdpnpccoofpliimaahmaaome/background.html",
+    "type": "background_page"
+  },
+  {
+    "title": "Buddie",
+    "url": "http://127.0.0.1:8501/",
+    "type": "page"
+  },
+  {
+    "title": "Omnibox Popup",
+    "url": "chrome://omnibox-popup.top-chrome/",
+    "type": "browser_ui"
+  },
+  {
+    "title": "Omnibox Popup",
+    "url": "chrome://omnibox-popup.top-chrome/omnibox_popup_aim.html",
+    "type": "browser_ui"
+  },
+  {
+    "title": "Service Worker chrome-extension://fignfifoniblkonapihmkfakmlgkbkcf/service_worker.js",
+    "url": "chrome-extension://fignfifoniblkonapihmkfakmlgkbkcf/service_worker.js",
+    "type": "service_worker"
+  },
+  {
+    "title": "Service Worker chrome-extension://ghbmnnjooekpmoecnnnilnnbdlolhkhi/service_worker_bin_prod.js",
+    "url": "chrome-extension://ghbmnnjooekpmoecnnnilnnbdlolhkhi/service_worker_bin_prod.js",
+    "type": "service_worker"
+  }
+]
+attempt 0 {'url': 'http://127.0.0.1:8501/', 'title': 'Buddie', 'text': 'Buddie AI Employee Assistant edit_square New conversation Γï« expand_more Buddie AI Employee Assistant How can I help you today? Ask about leave, holidays, benefits, company policies, or your day-to-day work. Try asking about My leave Leave history Upcoming holidays Pending actions add More topics expand_more', 'hasBrand': True, 'hasChat': True, 'htmlHasBuddie': True}
+styles {
+  "brandText": "Buddie",
+  "brandColor": "rgb(15, 118, 110)",
+  "brandSize": "32px",
+  "subText": "AI Employee Assistant",
+  "subColor": "rgb(100, 116, 139)",
+  "welcomeBrand": "Buddie",
+  "welcomeBrandColor": "rgb(15, 118, 110)",
+  "welcomeSub": "AI Employee Assistant",
+  "welcomeText": "How can I help you today?",
+  "welcomeColor": "rgb(22, 50, 58)",
+  "appBg": "rgb(244, 251, 250)",
+  "chatBorder": "rgb(217, 231, 229)",
+  "chatBg": "rgb(255, 255, 255)",
+  "sendBg": "rgb(15, 118, 110)",
+  "sendColor": "rgb(255, 255, 255)",
+  "sendOpacity": "0.45",
+  "pills": [
+    {
+      "text": "My leave",
+      "bg": "rgb(255, 255, 255)",
+      "border": "rgb(217, 231, 229)",
+      "color": "rgb(22, 50, 58)",
+      "testid": null,
+      "kind": null
+    },
+    {
+      "text": "Leave history",
+      "bg": "rgb(255, 255, 255)",
+      "border": "rgb(217, 231, 229)",
+      "color": "rgb(22, 50, 58)",
+      "testid": null,
+      "kind": null
+    },
+    {
+      "text": "Upcoming holidays",
+      "bg": "rgb(255, 255, 255)",
+      "border": "rgb(217, 231, 229)",
+      "color": "rgb(22, 50, 58)",
+      "testid": null,
+      "kind": null
+    },
+    {
+      "text": "Pending actions",
+      "bg": "rgb(255, 255, 255)",
+      "border": "rgb(217, 231, 229)",
+      "color": "rgb(22, 50, 58)",
+      "testid": null,
+      "kind": null
+    }
+  ]
+}
+screenshot_bytes 40192

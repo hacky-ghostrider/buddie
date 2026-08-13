@@ -1,0 +1,59 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# uv / packaging
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.pem
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+.cursor/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+.deepeval/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and runtime data
+*.log
+logs/
+
+# Local data artifacts (keep directory via .gitkeep / README)
+data/*
+!data/.gitkeep
+!data/README.md
+# Demo runtime outputs (committed samples live under sample_outputs/)
+data/demo/
+
+# Jupyter
+.ipynb_checkpoints/
