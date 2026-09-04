@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.agent.models import AgentRunResult
@@ -14,6 +15,8 @@ from app.evaluation.quality.decision import QualityDecision, QualityStatus
 from app.evaluation.report import EvaluationReport
 from app.main import create_app
 from app.retrieval.models import RetrievedDocument
+
+pytestmark = pytest.mark.smoke
 
 
 def _client_with_agent(mock_agent: MagicMock) -> TestClient:

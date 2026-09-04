@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+pytestmark = pytest.mark.sanity
+
 from evals.metrics.config import (
     METRIC_ANSWER_RELEVANCY,
     METRIC_CONTEXTUAL_PRECISION,

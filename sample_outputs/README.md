@@ -1,7 +1,7 @@
 # Sample Outputs
 
 Committed examples of evaluation / quality / benchmark artifacts for README
-browsing and interviews. Runtime outputs from `make demo` go to `data/demo/`
+browsing. Runtime outputs from `make demo` go to `data/demo/`
 (gitignored) and may differ slightly.
 
 | File | Description |

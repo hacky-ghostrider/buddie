@@ -52,8 +52,29 @@ logs/
 data/*
 !data/.gitkeep
 !data/README.md
+!data/reports/
+data/reports/*
+!data/reports/README.md
+!data/reports/allure/
+data/reports/allure/*
+!data/reports/allure/latest/
+data/reports/allure/latest/*
+!data/reports/allure/latest/.gitkeep
+!data/reports/allure/history/
+data/reports/allure/history/*
+!data/reports/allure/history/.gitkeep
 # Demo runtime outputs (committed samples live under sample_outputs/)
 data/demo/
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Local learning / interview notes (keep on disk, not in public repo)
+docs/interview/
+docs/sprints/
+docs/architecture/
+docs/design/
+docs/README.md
+docs/demo/agent-tools-foundation.md
+docs/demo/quality-gates-demo.md
+ROADMAP.md

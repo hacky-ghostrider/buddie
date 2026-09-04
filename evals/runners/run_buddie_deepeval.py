@@ -1,4 +1,4 @@
-"""CLI: run Buddie evaluation suite on the frozen 28 goldens.
+"""CLI: run Buddie evaluation suite on the frozen golden dataset.
 
 Uses ``app.api.deps.get_agent_service`` and Gemini (DeepEval ``GeminiModel``)
 when ``GOOGLE_API_KEY`` or ``GEMINI_API_KEY`` is set. Does not hard-code or
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Run Buddie AI evaluation suite (28 golden cases)",
+        description="Run Buddie AI evaluation suite (golden cases)",
     )
     parser.add_argument(
         "--output",
@@ -33,6 +33,12 @@ def main(argv: list[str] | None = None) -> int:
         dest="case_ids",
         default=None,
         help="Optional case id filter (repeatable)",
+    )
+    parser.add_argument(
+        "--tier",
+        choices=("smoke", "sanity", "regression"),
+        default=None,
+        help="Run only golden cases tagged for this CI tier",
     )
     parser.add_argument(
         "-v",
@@ -93,6 +99,7 @@ def main(argv: list[str] | None = None) -> int:
         agent,
         config=config,
         case_ids=args.case_ids,
+        test_tier=args.tier,
     )
     write_suite_report_json(report, args.output)
     print(format_annotation_console(build_annotation_report()))

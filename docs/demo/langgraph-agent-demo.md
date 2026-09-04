@@ -1,11 +1,9 @@
-# LangGraph Agent Demo — Interview Walkthrough
+# LangGraph Agent Demo
 
 **Scenario:** `agent-tools-foundation-001`  
-**Dataset:** [`datasets/agent-tools-foundation-001.json`](../../datasets/agent-tools-foundation-001.json)  
-**Sprint:** 11 (production LangGraph agent)
+**Dataset:** [`datasets/agent-tools-foundation-001.json`](../../datasets/agent-tools-foundation-001.json)
 
-This walkthrough shows a **production-quality single agent** with full
-evaluation — not a toy chatbot.
+Walkthrough for the LangGraph agent with tool contracts, tracing, and evaluation.
 
 ---
 

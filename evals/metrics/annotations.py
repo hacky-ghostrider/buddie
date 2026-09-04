@@ -17,6 +17,7 @@ EXPECTED_CATEGORY_COUNTS: dict[str, int] = {
     "rag_knowledge": 4,
     "multi_tool": 5,
     "negative_unknown": 4,
+    "adversarial_security": 8,
 }
 
 
@@ -35,6 +36,7 @@ class AnnotationCoverageReport(BaseModel):
     cases_with_verification_expectation: list[str] = Field(default_factory=list)
     cases_with_negative_unknown_behavior: list[str] = Field(default_factory=list)
     cases_with_evaluation_notes: list[str] = Field(default_factory=list)
+    cases_with_adversarial_security: list[str] = Field(default_factory=list)
     counts: dict[str, int] = Field(default_factory=dict)
 
     def to_public_dict(self) -> dict[str, Any]:
@@ -55,6 +57,7 @@ def build_annotation_report(
     with_hitl: list[str] = []
     with_verification: list[str] = []
     with_negative: list[str] = []
+    with_adversarial: list[str] = []
     with_notes: list[str] = []
 
     for case in data.cases:
@@ -75,6 +78,8 @@ def build_annotation_report(
             in {"refuse_or_insufficient", "require_verification"}
         ):
             with_negative.append(case.id)
+        if case.category == "adversarial_security":
+            with_adversarial.append(case.id)
         if case.evaluation_notes:
             with_notes.append(case.id)
 
@@ -88,6 +93,7 @@ def build_annotation_report(
         cases_with_hitl_expectation=with_hitl,
         cases_with_verification_expectation=with_verification,
         cases_with_negative_unknown_behavior=with_negative,
+        cases_with_adversarial_security=with_adversarial,
         cases_with_evaluation_notes=with_notes,
         counts={
             "expected_tool": len(with_tool),
@@ -97,6 +103,7 @@ def build_annotation_report(
             "hitl_expectation": len(with_hitl),
             "verification_expectation": len(with_verification),
             "negative_unknown_behavior": len(with_negative),
+            "adversarial_security": len(with_adversarial),
             "evaluation_notes": len(with_notes),
         },
     )
@@ -116,6 +123,7 @@ def format_annotation_console(report: AnnotationCoverageReport) -> str:
         "rag_knowledge",
         "multi_tool",
         "negative_unknown",
+        "adversarial_security",
     ):
         lines.append(f"    {name}: {report.by_category.get(name, 0)}")
     lines.extend(
@@ -130,6 +138,8 @@ def format_annotation_console(report: AnnotationCoverageReport) -> str:
             f"{report.counts.get('verification_expectation', 0)}",
             f"    negative/unknown behavior: "
             f"{report.counts.get('negative_unknown_behavior', 0)}",
+            f"    adversarial/security: "
+            f"{report.counts.get('adversarial_security', 0)}",
         ]
     )
     return "\n".join(lines)

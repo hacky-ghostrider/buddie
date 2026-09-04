@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.config.settings import Settings, get_settings
 from app.main import create_app
+
+pytestmark = pytest.mark.smoke
 
 
 def test_health_endpoint_returns_ok() -> None:

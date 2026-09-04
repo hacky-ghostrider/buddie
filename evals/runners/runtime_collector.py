@@ -178,9 +178,24 @@ def collect_deepeval_case(
                 "tool_name": e.tool_name,
                 "arguments": dict(e.arguments or {}),
                 "success": bool(e.success),
+                "status": (
+                    e.status.value if hasattr(e.status, "value") else str(e.status)
+                ),
+                "error": e.error if not e.success else None,
             }
             for e in result.tool_executions
         ]
+    tool_failure_details = [
+        f"{inv.get('tool_name')}: {inv.get('error')}"
+        for inv in tools_invoked
+        if isinstance(inv, dict) and inv.get("error")
+    ]
+    routing_error = None
+    for inv in tools_invoked:
+        if isinstance(inv, dict) and inv.get("error"):
+            routing_error = str(inv.get("error"))
+            break
+    mcp_block = meta.get("mcp") if isinstance(meta.get("mcp"), dict) else {}
     return DeepEvalCompatibleCase(
         case_id=case.id,
         input=case.user_query,
@@ -205,6 +220,11 @@ def collect_deepeval_case(
             ),
             "rag_used": meta.get("rag_used"),
             "latency_ms": result.latency_ms,
+            "detected_intent": meta.get("detected_intent"),
+            "selected_route": meta.get("selected_route"),
+            "routing_error": routing_error,
+            "tool_failure_details": tool_failure_details,
+            "mcp_last_error": mcp_block.get("last_error"),
             # Annotated expectations echoed for agent checks (reference only)
             "expected_tool": case.expected_tool,
             "expected_tools": list(case.expected_tools),

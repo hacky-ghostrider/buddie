@@ -1,8 +1,8 @@
-# RAG Evaluation Platform
+# Buddie — Agentic RAG & Evaluation Platform
 
-**Version 1.0.0** — Production-ready open-source platform for building, tracing, and gatekeeping Retrieval-Augmented Generation (RAG) and tool-using agents.
+**Version 1.0.0** — Production-oriented platform for building, tracing, and gatekeeping Retrieval-Augmented Generation (RAG) and tool-using agents.
 
-Clone → `make setup` → `make demo` → see LangGraph, LangSmith, DeepEval, tool validation, quality gates, and reports — **no API keys required** for the offline demo.
+Clone → `make setup` → `make demo` → LangGraph, LangSmith, DeepEval, tool validation, quality gates, and reports — **no API keys required** for the offline demo.
 
 ---
 
@@ -37,13 +37,13 @@ This is not a chatbot toy. It is an **AI evaluation platform**: a layered RAG pi
 ## Quick Start
 
 ```bash
-git clone https://github.com/<your-org>/rag-evaluation-platform.git
-cd rag-evaluation-platform
+git clone https://github.com/hacky-ghostrider/buddie.git
+cd buddie
 
 # Install (uv preferred)
 make setup
 
-# Interview / recruiter demo — offline, no API keys
+# Offline demo — no API keys
 make demo
 ```
 
@@ -55,13 +55,11 @@ Thin presentation layer over FastAPI — no RAG/agent/evaluation logic in the UI
 
 ```bash
 # Terminal 1 — backend
-this -- uv run uvicorn app.main:app --reload
-or -- uv run uvicorn app.main:app --reload --port 8000
+uv run uvicorn app.main:app --reload --port 8000
 # or: make api
 
 # Terminal 2 — Streamlit UI
-2. uv run streamlit run frontend/app.py
-
+uv run streamlit run frontend/app.py
 # or: make ui
 ```
 
@@ -198,13 +196,10 @@ make demo
 # or from the UI: Run Demo
 ```
 
-Canonical scenario docs:
+Canonical walkthroughs:
 
-- [Chatbot UI demo (5 min)](docs/demo/chatbot-demo.md)
-- [Agent tools foundation](docs/demo/agent-tools-foundation.md)
+- [Chatbot UI demo](docs/demo/chatbot-demo.md)
 - [LangGraph agent demo](docs/demo/langgraph-agent-demo.md)
-- [Quality gates demo](docs/demo/quality-gates-demo.md)
-- [90-minute interview walkthrough](docs/interview/90-minute-interview-walkthrough.md)
 
 ---
 
@@ -228,11 +223,6 @@ Ingestion → Embeddings → VectorStore → Retrieval → Generation
                                                       ↓
                                          Benchmark History
 ```
-
-Mermaid diagrams (component, sequence, deployment, evaluation, agent, tool validation):  
-[docs/architecture/diagrams.md](docs/architecture/diagrams.md)
-
-ADRs: [docs/architecture/README.md](docs/architecture/README.md)
 
 ### Architecture Diagram
 
@@ -334,15 +324,13 @@ DeepEval LLM-as-judge metrics are wrapped by `DeepEvalMetricAdapter` implementin
 | Answer Relevancy | Relevance to the question |
 | Contextual Precision / Recall | Retrieval quality vs expected answer |
 
-Business code never imports DeepEval types. Offline demo injects deterministic measure functions so CI and recruiters need no API keys.
+Business code never imports DeepEval types. Offline demo injects deterministic measure functions so CI runs need no API keys.
 
 ---
 
 ## Quality Gates
 
 Configurable rules from Settings produce **PASS / WARNING / FAIL**, recommendations, and `quality_report.{json,csv,html}`.
-
-See [ADR-012](docs/architecture/ADR-012-AI-Quality-Gates.md).
 
 ---
 
@@ -367,7 +355,7 @@ History is appended under `BENCHMARK_HISTORY_PATH` for trend / regression compar
 | `make evaluate` | Dry-run evaluation automation |
 | `make benchmark` | Benchmark aggregation |
 | `make quality-gate` | CI quality-gate validator |
-| `make demo` | Interview demo |
+| `make demo` | Offline canonical demo |
 | `make api` | Start FastAPI |
 | `make ui` | Start Streamlit chatbot |
 | `make docker` | Build image |
@@ -390,37 +378,16 @@ Committed examples (for README browsing without running the demo):
 
 ---
 
-## Interview Story
-
-> We built a production RAG stack, then made the agent a **first-class citizen of evaluation**: tools run under contracts, traces go to LangSmith, language quality goes through DeepEval adapters, and release policy is enforced by quality gates — the AI analogue of CI.
-
-Prepare with:
-
-1. [90-minute walkthrough](docs/interview/90-minute-interview-walkthrough.md)
-2. [Interview questions](docs/interview/questions.md)
-3. [Design trade-offs](docs/design/tradeoffs.md)
-
----
-
-## Future Roadmap
-
-Version 2 (not in this release): Memory, Reflection, MCP, RAGAS, Phoenix, OpenTelemetry, distributed evaluation, multi-agent.
-
-See [ROADMAP.md](ROADMAP.md).
-
----
-
-## Documentation Index
+## Documentation
 
 | Doc | Description |
 |-----|-------------|
-| [docs/README.md](docs/README.md) | Sprint + ADR index |
-| [docs/architecture/diagrams.md](docs/architecture/diagrams.md) | Mermaid diagrams |
-| [docs/design/tradeoffs.md](docs/design/tradeoffs.md) | Why LangGraph, Chroma, DeepEval, … |
+| [evals/README.md](evals/README.md) | Buddie golden dataset, metrics, and eval CLI |
+| [docs/demo/chatbot-demo.md](docs/demo/chatbot-demo.md) | Streamlit UI walkthrough |
+| [docs/demo/langgraph-agent-demo.md](docs/demo/langgraph-agent-demo.md) | LangGraph agent walkthrough |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute |
 | [SECURITY.md](SECURITY.md) | Vulnerability reporting |
-| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community standards |
 | [LICENSE](LICENSE) | MIT |
 
 ---

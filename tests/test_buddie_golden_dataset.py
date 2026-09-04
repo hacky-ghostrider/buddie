@@ -14,6 +14,8 @@ import pytest
 
 from app.mcp.schemas import EXPECTED_MCP_TOOL_NAMES
 
+pytestmark = pytest.mark.smoke
+
 GOLDEN_PATH = (
     Path(__file__).resolve().parents[1]
     / "evals"
@@ -37,6 +39,7 @@ ALLOWED_CATEGORIES = frozenset(
         "rag_knowledge",
         "multi_tool",
         "negative_unknown",
+        "adversarial_security",
     }
 )
 
@@ -68,8 +71,13 @@ ALLOWED_TOOLS = frozenset(
     }
 )
 
+ALLOWED_TIERS = frozenset({"smoke", "sanity", "regression"})
+
 MIN_CASES = 20
-MAX_CASES = 30
+MAX_CASES = 40
+
+MIN_SMOKE_CASES = 3
+MIN_SANITY_CASES = 8
 
 
 def _load_dataset() -> dict[str, Any]:
@@ -126,7 +134,8 @@ def test_categories_are_allowed(cases: list[dict[str, Any]]) -> None:
     categories = {case["category"] for case in cases}
     assert categories <= ALLOWED_CATEGORIES
     # Sprint coverage: every major bucket should appear at least once.
-    assert ALLOWED_CATEGORIES <= categories
+    required = ALLOWED_CATEGORIES
+    assert required <= categories
 
 
 def test_expected_behaviors_are_allowed(cases: list[dict[str, Any]]) -> None:
@@ -176,6 +185,7 @@ def test_no_unexpected_top_level_case_keys(cases: list[dict[str, Any]]) -> None:
         "expected_tools",
         "expected_behavior",
         "evaluation_notes",
+        "test_tier",
     }
     for case in cases:
         extra = set(case) - allowed
@@ -201,3 +211,23 @@ def test_hitl_case_excludes_write_tool_on_draft(cases: list[dict[str, Any]]) -> 
     for case in hitl:
         tools = case.get("expected_tools") or []
         assert "create_leave_request" not in tools, case["id"]
+
+
+def test_test_tier_values_are_valid(cases: list[dict[str, Any]]) -> None:
+    for case in cases:
+        tiers = case.get("test_tier")
+        assert isinstance(tiers, list) and tiers, f"{case['id']}: missing test_tier"
+        assert set(tiers) <= ALLOWED_TIERS, case["id"]
+        assert "regression" in tiers, case["id"]
+
+
+def test_smoke_tier_has_minimum_cases(cases: list[dict[str, Any]]) -> None:
+    smoke = [c for c in cases if "smoke" in c.get("test_tier", [])]
+    assert len(smoke) >= MIN_SMOKE_CASES
+
+
+def test_sanity_tier_covers_every_category(cases: list[dict[str, Any]]) -> None:
+    sanity = [c for c in cases if "sanity" in c.get("test_tier", [])]
+    assert len(sanity) >= MIN_SANITY_CASES
+    sanity_categories = {c["category"] for c in sanity}
+    assert sanity_categories == ALLOWED_CATEGORIES

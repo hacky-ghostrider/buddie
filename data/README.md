@@ -27,4 +27,8 @@ uv run python scripts/seed_vectorstore.py
 uv run python -c "from app.services import DocumentIngestionService; print(len(DocumentIngestionService().load('data/your_file.pdf')))"
 ```
 
-Binary contents of `data/` (except this README / `.gitkeep` / `sample/`) are gitignored.
+Evaluation and Allure reports are written under [`data/reports/`](reports/README.md)
+(latest Allure: `reports/allure/latest/`, history: `reports/allure/history/`).
+
+Binary contents of `data/` (except this README / `.gitkeep` / `sample/` / `reports/README.md`
+and Allure placeholders) are gitignored.

@@ -16,8 +16,8 @@ import logging
 from collections.abc import Callable, Sequence
 from typing import Any
 
-from evals.golden_dataset.loader import load_buddie_golden_dataset
-from evals.golden_dataset.models import BuddieGoldenCase, BuddieGoldenDataset
+from evals.golden_dataset.loader import filter_cases_by_tier, load_buddie_golden_dataset
+from evals.golden_dataset.models import BuddieGoldenCase, BuddieGoldenDataset, BuddieTestTier
 from evals.metrics.agent_checks import evaluate_agent_checks
 from evals.metrics.annotations import build_annotation_report
 from evals.metrics.config import (
@@ -32,6 +32,19 @@ from evals.metrics.config import (
     default_buddie_deepeval_config,
 )
 from evals.metrics.g_eval import measure_final_response_correctness
+from evals.metrics.failure_diagnostics import (
+    DiagnosticBundle,
+    FailureKind,
+    diagnose_deterministic_score,
+    diagnose_metric_scores,
+    log_case_diagnostics,
+    merge_diagnostic_bundles,
+)
+from evals.metrics.robustness import evaluate_robustness_checks
+from evals.metrics.runtime_health import evaluate_runtime_health
+from evals.metrics.safety import evaluate_safety_checks
+from evals.metrics.semantic_similarity import semantic_similarity_passed, semantic_similarity_score
+from evals.metrics.tool_workflow import evaluate_tool_workflow, tool_failure_messages
 from evals.metrics.results import (
     CaseEvaluationResult,
     MetricScoreResult,
@@ -110,6 +123,24 @@ def _overall_status(
     return "failed", reasons
 
 
+def _deterministic_failure_reasons(
+    *,
+    safety_reasons: list[str],
+    robustness_reasons: list[str],
+    workflow_reasons: list[str],
+    runtime_reasons: list[str],
+    semantic_pass: float | None,
+) -> list[str]:
+    reasons: list[str] = []
+    reasons.extend(safety_reasons)
+    reasons.extend(robustness_reasons)
+    reasons.extend(workflow_reasons)
+    reasons.extend(runtime_reasons)
+    if semantic_pass is not None and semantic_pass < 1.0:
+        reasons.append("semantic_similarity: failed (score below threshold)")
+    return reasons
+
+
 def evaluate_deepeval_case(
     case: DeepEvalCompatibleCase,
     config: BuddieDeepEvalConfig,
@@ -117,7 +148,7 @@ def evaluate_deepeval_case(
     measure_fn: MetricMeasureFn | None = None,
     golden: BuddieGoldenCase | None = None,
 ) -> CaseEvaluationResult:
-    """Score one case with DeepEval + retrieval + optional agent checks."""
+    """Score one case with DeepEval + retrieval + agent/safety/robustness checks."""
     standard = measure_all_standard_metrics(
         case, config, measure_fn=measure_fn, golden=golden
     )
@@ -148,6 +179,16 @@ def evaluate_deepeval_case(
     tool_c = arg_c = hitl_c = task_c = None
     expected_tools: list[str] = []
     actual_tools = actual_tools_from_case(case)
+
+    pii = unauthorized = injection = None
+    adv_refusal = unwanted_tool = unwanted_rag = None
+    semantic_pass: float | None = None
+    semantic_raw: float | None = None
+    order_c = workflow_success = None
+    tool_success_rate = graceful = empty_resp = None
+    tool_fail_msgs: list[str] = []
+    diagnostics: DiagnosticBundle = DiagnosticBundle(case_id=case.case_id)
+
     if golden is not None:
         expected_tools = expected_tools_from_golden(golden)
         agent = evaluate_agent_checks(golden, case)
@@ -157,10 +198,140 @@ def evaluate_deepeval_case(
         task_c = agent.task_completion
         agent_reasons = agent.failure_reasons()
 
+        safety = evaluate_safety_checks(golden, case)
+        pii = safety.pii_leakage
+        unauthorized = safety.unauthorized_data_access
+        injection = safety.prompt_injection_resistance
+
+        robustness = evaluate_robustness_checks(golden, case)
+        adv_refusal = robustness.adversarial_refusal
+        unwanted_tool = robustness.unwanted_tool_call
+        unwanted_rag = robustness.unwanted_rag_activation
+
+        workflow = evaluate_tool_workflow(golden, case)
+        order_c = workflow.tool_ordering_correctness
+        workflow_success = workflow.multi_tool_workflow_success
+
+        runtime = evaluate_runtime_health(golden, case)
+        graceful = runtime.runtime_graceful_degradation
+        empty_resp = runtime.runtime_empty_response
+        tool_success_rate = runtime.tool_call_success_rate
+        tool_fail_msgs = tool_failure_messages(case)
+
+        semantic_raw, sim_threshold = semantic_similarity_score(
+            golden,
+            case,
+            threshold=config.semantic_similarity,
+        )
+        semantic_pass = semantic_similarity_passed(
+            golden,
+            case,
+            threshold=config.semantic_similarity,
+        )
+
+        deterministic_reasons = _deterministic_failure_reasons(
+            safety_reasons=safety.failure_reasons(),
+            robustness_reasons=robustness.failure_reasons(),
+            workflow_reasons=workflow.failure_reasons(),
+            runtime_reasons=runtime.failure_reasons(),
+            semantic_pass=semantic_pass,
+        )
+
+        metric_diag = diagnose_metric_scores(case.case_id, scores)
+        det_bundles = [
+            diagnose_deterministic_score(
+                case.case_id,
+                "pii_leakage",
+                pii,
+                kind=FailureKind.PII_LEAKAGE,
+                detail="PII or balance leak detected",
+            ),
+            diagnose_deterministic_score(
+                case.case_id,
+                "unauthorized_data_access",
+                unauthorized,
+                kind=FailureKind.UNAUTHORIZED_DATA_ACCESS,
+                detail="protected tool access while unverified/adversarial",
+            ),
+            diagnose_deterministic_score(
+                case.case_id,
+                "prompt_injection_resistance",
+                injection,
+                kind=FailureKind.PROMPT_INJECTION_COMPLIANCE,
+                detail="model complied with injection phrasing",
+            ),
+            diagnose_deterministic_score(
+                case.case_id,
+                "adversarial_refusal",
+                adv_refusal,
+                kind=FailureKind.ROBUSTNESS,
+                detail="adversarial query not refused safely",
+            ),
+            diagnose_deterministic_score(
+                case.case_id,
+                "unwanted_tool_call",
+                unwanted_tool,
+                kind=FailureKind.UNWANTED_TOOL_CALL,
+                detail="employee/write tools on refuse/greeting case",
+            ),
+            diagnose_deterministic_score(
+                case.case_id,
+                "unwanted_rag_activation",
+                unwanted_rag,
+                kind=FailureKind.UNWANTED_RAG_ACTIVATION,
+                detail="knowledge tools on pure tool-route case",
+            ),
+            diagnose_deterministic_score(
+                case.case_id,
+                "semantic_similarity",
+                semantic_pass,
+                kind=FailureKind.SEMANTIC_SIMILARITY,
+                detail=f"raw={semantic_raw} threshold={sim_threshold}",
+            ),
+            diagnose_deterministic_score(
+                case.case_id,
+                "tool_ordering_correctness",
+                order_c,
+                kind=FailureKind.TOOL_WORKFLOW,
+                detail="expected tool order not preserved",
+            ),
+            diagnose_deterministic_score(
+                case.case_id,
+                "multi_tool_workflow_success",
+                workflow_success,
+                kind=FailureKind.TOOL_WORKFLOW,
+                detail="multi-tool workflow incomplete or failed",
+            ),
+            diagnose_deterministic_score(
+                case.case_id,
+                "runtime_graceful_degradation",
+                graceful,
+                kind=FailureKind.GRACEFUL_DEGRADATION,
+                detail="raw errors exposed after tool/API failure",
+            ),
+            diagnose_deterministic_score(
+                case.case_id,
+                "runtime_empty_response",
+                empty_resp,
+                kind=FailureKind.RUNTIME_EMPTY_RESPONSE,
+                detail="empty agent answer",
+            ),
+        ]
+        diagnostics = merge_diagnostic_bundles(
+            case.case_id,
+            [metric_diag, *det_bundles],
+        )
+        agent_reasons = agent_reasons + deterministic_reasons
+
     status, reasons = _overall_status(
         scores,
         agent_failure_reasons=agent_reasons,
         infrastructure_error=None,
+    )
+    log_case_diagnostics(
+        case.case_id,
+        diagnostics.diagnostics,
+        overall_status=status,
     )
     return CaseEvaluationResult(
         case_id=case.case_id,
@@ -188,6 +359,21 @@ def evaluate_deepeval_case(
         argument_correctness=arg_c,
         hitl_correctness=hitl_c,
         task_completion=task_c,
+        pii_leakage=pii,
+        unauthorized_data_access=unauthorized,
+        prompt_injection_resistance=injection,
+        adversarial_refusal=adv_refusal,
+        unwanted_tool_call=unwanted_tool,
+        unwanted_rag_activation=unwanted_rag,
+        semantic_similarity=semantic_pass,
+        semantic_similarity_raw=semantic_raw,
+        tool_ordering_correctness=order_c,
+        tool_call_success_rate=tool_success_rate,
+        multi_tool_workflow_success=workflow_success,
+        runtime_graceful_degradation=graceful,
+        runtime_empty_response=empty_resp,
+        failure_diagnostics=diagnostics.to_public_list(),
+        tool_failure_messages=tool_fail_msgs,
         overall_status=status,  # type: ignore[arg-type]
         failure_reasons=reasons,
         retrieval_context_count=len(case.retrieval_context),
@@ -269,12 +455,22 @@ def build_suite_report(
     rate_limited = sum(
         1 for c in case_results if c.overall_status == "rate_limited"
     )
+    adversarial_cases = sum(
+        1 for c in case_results if c.category == "adversarial_security"
+    )
+    adversarial_passed = sum(
+        1
+        for c in case_results
+        if c.category == "adversarial_security" and c.overall_status == "passed"
+    )
     return SuiteEvaluationReport(
         total_cases=len(case_results),
         passed=passed,
         failed=failed,
         errors=errors,
         rate_limited=rate_limited,
+        adversarial_cases=adversarial_cases,
+        adversarial_passed=adversarial_passed,
         metric_averages=_metric_averages(case_results),
         failed_case_ids=[
             c.case_id for c in case_results if c.overall_status == "failed"
@@ -308,6 +504,7 @@ def run_buddie_deepeval_suite(
     collect_fn: CollectFn | None = None,
     validate_tools: bool = False,
     case_ids: Sequence[str] | None = None,
+    test_tier: BuddieTestTier | None = None,
     include_annotation_summary: bool = True,
 ) -> SuiteEvaluationReport:
     """Execute and score Buddie golden cases without aborting on single failures."""
@@ -320,9 +517,11 @@ def run_buddie_deepeval_suite(
     )
 
     selected = list(data.cases)
+    if test_tier is not None:
+        selected = filter_cases_by_tier(selected, test_tier)
     if case_ids is not None:
         wanted = set(case_ids)
-        selected = [c for c in data.cases if c.id in wanted]
+        selected = [c for c in selected if c.id in wanted]
 
     results: list[CaseEvaluationResult] = []
     for golden in selected:
@@ -428,6 +627,18 @@ def format_suite_console(report: SuiteEvaluationReport) -> str:
             "argument_correctness",
             "hitl_correctness",
             "task_completion",
+            "pii_leakage",
+            "unauthorized_data_access",
+            "prompt_injection_resistance",
+            "adversarial_refusal",
+            "unwanted_tool_call",
+            "unwanted_rag_activation",
+            "semantic_similarity",
+            "tool_ordering_correctness",
+            "tool_call_success_rate",
+            "multi_tool_workflow_success",
+            "runtime_graceful_degradation",
+            "runtime_empty_response",
         ):
             value = flat.get(key)
             if value is not None:
@@ -435,6 +646,17 @@ def format_suite_console(report: SuiteEvaluationReport) -> str:
         if case.failure_reasons:
             for reason in case.failure_reasons:
                 lines.append(f"      reason: {reason}")
+        if case.tool_failure_messages:
+            for msg in case.tool_failure_messages:
+                lines.append(f"      tool_failure: {msg}")
+        if case.failure_diagnostics:
+            for diag in case.failure_diagnostics:
+                hint = diag.get("debug_hint")
+                kind = diag.get("kind")
+                message = diag.get("message")
+                lines.append(f"      diagnostic: {kind}: {message}")
+                if hint:
+                    lines.append(f"        hint: {hint}")
     return "\n".join(lines)
 
 

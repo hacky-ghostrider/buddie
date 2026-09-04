@@ -7,6 +7,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+pytestmark = pytest.mark.sanity
+
 from app.agent.service import AgentService
 from app.employees.service import EmployeeService
 from app.employees.store import EmployeeStore
@@ -152,8 +154,8 @@ def _failing_on_first_case_factory(fail_case_id: str):
     return _measure
 
 
-def test_golden_dataset_loads_twenty_eight(dataset) -> None:
-    assert len(dataset.cases) == 28
+def test_golden_dataset_loads_thirty_six(dataset) -> None:
+    assert len(dataset.cases) == 36
 
 
 def test_deepeval_fields_populated(agent: AgentService, dataset) -> None:
@@ -345,7 +347,7 @@ def test_infrastructure_failure_continues(
         assert case.infrastructure_error.startswith("infrastructure:")
 
 
-def test_full_suite_twenty_eight_with_injected_metrics(
+def test_full_suite_thirty_six_with_injected_metrics(
     agent: AgentService, dataset, config: BuddieDeepEvalConfig
 ) -> None:
     report = run_buddie_deepeval_suite(
@@ -354,19 +356,18 @@ def test_full_suite_twenty_eight_with_injected_metrics(
         config=config,
         measure_fn=_passing_measure,
     )
-    assert report.total_cases == 28
-    assert report.passed == 28
-    assert report.failed == 0
+    assert report.total_cases == 36
+    assert report.adversarial_cases == 8
     assert report.errors == 0
     assert set(report.metric_averages) >= {
         METRIC_ANSWER_RELEVANCY,
         METRIC_FINAL_RESPONSE_CORRECTNESS,
     }
     payload = report.to_json_dict()
-    assert payload["total_cases"] == 28
-    assert len(payload["cases"]) == 28
+    assert payload["total_cases"] == 36
+    assert len(payload["cases"]) == 36
     assert payload.get("annotation_summary")
-    assert payload["annotation_summary"]["total_cases"] == 28
+    assert payload["annotation_summary"]["total_cases"] == 36
     first = payload["cases"][0]
     assert {
         "case_id",

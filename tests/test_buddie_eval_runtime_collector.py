@@ -10,6 +10,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+pytestmark = pytest.mark.sanity
+
 from app.agent.service import AgentService
 from app.employees.service import EmployeeService
 from app.employees.store import EmployeeStore
@@ -107,7 +109,7 @@ def dataset():
 def test_buddie_golden_loader_reads_baseline(dataset) -> None:
     assert BUDDIE_GOLDEN_CASES_PATH.is_file()
     assert dataset.name == "buddie_golden_cases"
-    assert len(dataset.cases) == 28
+    assert len(dataset.cases) == 36
     assert dataset.default_session.get("verified_employee_id") == "E-1101"
 
 
@@ -220,7 +222,7 @@ def test_collect_preserves_expected_output_and_separates_contexts(
 
 def test_collect_all_twenty_eight_cases(agent: AgentService, dataset) -> None:
     cases = collect_all_deepeval_cases(dataset, agent)
-    assert len(cases) == 28
+    assert len(cases) == 36
     ids = {c.case_id for c in cases}
     assert ids == {c.id for c in dataset.cases}
     for item in cases:

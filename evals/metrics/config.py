@@ -13,6 +13,7 @@ from typing import Any, Final
 
 
 DEFAULT_PASS_THRESHOLD: Final[float] = 0.7
+DEFAULT_SEMANTIC_SIMILARITY_THRESHOLD: Final[float] = 0.35
 
 # DeepEval-native Gemini Flash model suitable for evaluation judges.
 # gemini-2.5-flash is unavailable to new API keys; flash-lite has higher free-tier RPM.
@@ -31,6 +32,7 @@ METRIC_CONTEXTUAL_PRECISION: Final[str] = "contextual_precision"
 METRIC_CONTEXTUAL_RECALL: Final[str] = "contextual_recall"
 METRIC_CONTEXTUAL_RELEVANCY: Final[str] = "contextual_relevancy"
 METRIC_FINAL_RESPONSE_CORRECTNESS: Final[str] = "final_response_correctness"
+METRIC_SEMANTIC_SIMILARITY: Final[str] = "semantic_similarity"
 
 PRIMARY_METRIC_NAMES: Final[tuple[str, ...]] = (
     METRIC_FAITHFULNESS,
@@ -204,6 +206,7 @@ class BuddieDeepEvalConfig:
     contextual_recall: float = DEFAULT_PASS_THRESHOLD
     contextual_relevancy: float = DEFAULT_PASS_THRESHOLD
     final_response_correctness: float = DEFAULT_PASS_THRESHOLD
+    semantic_similarity: float = DEFAULT_SEMANTIC_SIMILARITY_THRESHOLD
     # Case passes only when every non-skipped metric passes.
     require_all_metrics: bool = True
     # DeepEval judge: must be an explicit GeminiModel instance for live LLM metrics.
@@ -220,6 +223,7 @@ class BuddieDeepEvalConfig:
             METRIC_CONTEXTUAL_RECALL: self.contextual_recall,
             METRIC_CONTEXTUAL_RELEVANCY: self.contextual_relevancy,
             METRIC_FINAL_RESPONSE_CORRECTNESS: self.final_response_correctness,
+            METRIC_SEMANTIC_SIMILARITY: self.semantic_similarity,
         }
         if metric_name not in mapping:
             raise KeyError(f"Unknown Buddie DeepEval metric: {metric_name}")
@@ -244,6 +248,7 @@ def default_buddie_deepeval_config() -> BuddieDeepEvalConfig:
         contextual_recall=threshold,
         contextual_relevancy=threshold,
         final_response_correctness=threshold,
+        semantic_similarity=DEFAULT_SEMANTIC_SIMILARITY_THRESHOLD,
         model=resolve_deepeval_judge_model(),
     )
 
@@ -251,12 +256,14 @@ def default_buddie_deepeval_config() -> BuddieDeepEvalConfig:
 __all__ = [
     "DEFAULT_GEMINI_JUDGE_MODEL",
     "DEFAULT_PASS_THRESHOLD",
+    "DEFAULT_SEMANTIC_SIMILARITY_THRESHOLD",
     "METRIC_ANSWER_RELEVANCY",
     "METRIC_CONTEXTUAL_PRECISION",
     "METRIC_CONTEXTUAL_RECALL",
     "METRIC_CONTEXTUAL_RELEVANCY",
     "METRIC_FAITHFULNESS",
     "METRIC_FINAL_RESPONSE_CORRECTNESS",
+    "METRIC_SEMANTIC_SIMILARITY",
     "METRIC_HALLUCINATION",
     "METRICS_INVERT_RAW_SCORE",
     "METRICS_REQUIRING_RETRIEVAL_CONTEXT",

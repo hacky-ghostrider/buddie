@@ -60,6 +60,11 @@ testpaths = ["tests"]
 pythonpath = ["."]
 asyncio_mode = "auto"
 markers = [
+    "smoke: fast health/API/schema checks for PR CI (<2 min)",
+    "sanity: core Buddie flows and deterministic eval metrics for PR CI",
+    "regression: full golden suite and Allure reporting",
+    "slow: live Gemini / DeepEval judge (requires API key)",
+    "live_llm: requires GOOGLE_API_KEY or GEMINI_API_KEY",
     "integration: tests that require a working native vector DB runtime",
 ]
 

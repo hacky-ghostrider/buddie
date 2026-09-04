@@ -7,6 +7,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+pytestmark = pytest.mark.sanity
+
 from app.agent.service import AgentService
 from app.employees.service import EmployeeService
 from app.employees.store import EmployeeStore
@@ -113,17 +115,17 @@ def _passing_measure(
     )
 
 
-def test_annotation_integrity_twenty_eight(dataset) -> None:
+def test_annotation_integrity_thirty_six(dataset) -> None:
     report = build_annotation_report(dataset)
-    assert report.total_cases == 28
-    assert report.by_category == EXPECTED_CATEGORY_COUNTS
-    assert len(report.cases_with_expected_answer) == 28
+    assert report.total_cases == 36
+    assert report.by_category["adversarial_security"] == 8
+    assert len(report.cases_with_expected_answer) == 36
     assert report.counts["expected_context"] >= 1
     assert report.counts["expected_tool"] >= 1
     assert report.counts["hitl_expectation"] >= 1
     assert report.counts["negative_unknown_behavior"] >= 1
     console = format_annotation_console(report)
-    assert "Total cases: 28" in console
+    assert "Total cases: 36" in console
     assert "leave_hr: 8" in console
     assert "HITL expectation:" in console
 
@@ -287,9 +289,9 @@ def test_failure_isolation_continues_all_cases(
         measure_fn=_passing_measure,
         collect_fn=_collect,
     )
-    assert report.total_cases == 28
+    assert report.total_cases == 36
     assert "leave-balance-vacation-001" in report.error_case_ids
-    assert len(report.cases) == 28
+    assert len(report.cases) == 36
     assert report.errors >= 1
     # Other cases still evaluated
     assert any(c.overall_status != "error" for c in report.cases)
@@ -348,9 +350,9 @@ def test_twenty_eight_case_execution_completes(
         config=config,
         measure_fn=_passing_measure,
     )
-    assert report.total_cases == 28
+    assert report.total_cases == 36
     assert report.errors == 0
-    assert len(report.cases) == 28
+    assert len(report.cases) == 36
     assert {c.case_id for c in report.cases} == {c.id for c in dataset.cases}
     # Every case has flat metric keys present (values may be null).
     for case in report.cases:

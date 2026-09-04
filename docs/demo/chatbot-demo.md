@@ -1,7 +1,6 @@
-# Chatbot UI Demo — 5-Minute Interview Walkthrough
+# Chatbot UI Demo
 
-**Audience:** Interviewer / hiring manager  
-**UI:** Streamlit (`frontend/app.py`) → FastAPI → existing platform services  
+**UI:** Streamlit (`frontend/app.py`) → FastAPI → platform services  
 **Canonical scenario:** `agent-tools-foundation-001`
 
 ---
@@ -133,12 +132,10 @@ Talking points:
 
 ---
 
-## Interview questions this UI unlocks
+## Discussion topics
 
 - Why keep the UI separate from `RAGService` / `AgentService`?
 - Why call HTTP instead of importing services into Streamlit?
-- How would you replace Streamlit with React without rewriting evaluation?
+- How would you replace Streamlit with another client without rewriting evaluation?
 - Where do secrets live, and why?
 - How do quality gates differ from DeepEval metric scores?
-
-See also: [90-minute interview walkthrough](../interview/90-minute-interview-walkthrough.md).

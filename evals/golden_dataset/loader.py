@@ -7,7 +7,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from evals.golden_dataset.models import BuddieGoldenDataset
+from evals.golden_dataset.models import BuddieGoldenCase, BuddieGoldenDataset, BuddieTestTier
 
 BUDDIE_GOLDEN_CASES_PATH = Path(__file__).resolve().parent / "buddie_golden_cases.json"
 
@@ -47,4 +47,28 @@ def load_buddie_golden_dataset(
         raise ValueError(f"Invalid Buddie golden dataset: {exc}") from exc
 
 
-__all__ = ["BUDDIE_GOLDEN_CASES_PATH", "load_buddie_golden_dataset"]
+def filter_cases_by_tier(
+    cases: list[BuddieGoldenCase],
+    tier: BuddieTestTier,
+) -> list[BuddieGoldenCase]:
+    """Return golden cases tagged for the given CI tier."""
+    return [case for case in cases if tier in case.test_tier]
+
+
+def case_ids_for_tier(
+    dataset: BuddieGoldenDataset,
+    tier: BuddieTestTier,
+) -> list[str]:
+    """Stable ordered case ids for a tier (preserves dataset order)."""
+    return [case.id for case in filter_cases_by_tier(dataset.cases, tier)]
+
+
+__all__ = [
+    "BUDDIE_GOLDEN_CASES_PATH",
+    "BuddieGoldenCase",
+    "BuddieGoldenDataset",
+    "BuddieTestTier",
+    "case_ids_for_tier",
+    "filter_cases_by_tier",
+    "load_buddie_golden_dataset",
+]

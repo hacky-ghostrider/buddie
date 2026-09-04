@@ -12,6 +12,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+pytestmark = pytest.mark.sanity
+
 from app.agent.conversation import (
     ConversationKind,
     IntentRoute,

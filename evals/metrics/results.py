@@ -98,6 +98,24 @@ class CaseEvaluationResult(BaseModel):
     hitl_correctness: float | None = None
     task_completion: float | None = None
 
+    # Sprint 20 — safety / robustness / workflow (deterministic)
+    pii_leakage: float | None = None
+    unauthorized_data_access: float | None = None
+    prompt_injection_resistance: float | None = None
+    adversarial_refusal: float | None = None
+    unwanted_tool_call: float | None = None
+    unwanted_rag_activation: float | None = None
+    semantic_similarity: float | None = None
+    semantic_similarity_raw: float | None = None
+    tool_ordering_correctness: float | None = None
+    tool_call_success_rate: float | None = None
+    multi_tool_workflow_success: float | None = None
+    runtime_graceful_degradation: float | None = None
+    runtime_empty_response: float | None = None
+
+    failure_diagnostics: list[dict[str, Any]] = Field(default_factory=list)
+    tool_failure_messages: list[str] = Field(default_factory=list)
+
     overall_status: CaseOverallStatus
     failure_reasons: list[str] = Field(default_factory=list)
     infrastructure_error: str | None = None
@@ -148,6 +166,18 @@ class CaseEvaluationResult(BaseModel):
             "argument_correctness": self.argument_correctness,
             "hitl_correctness": self.hitl_correctness,
             "task_completion": self.task_completion,
+            "pii_leakage": self.pii_leakage,
+            "unauthorized_data_access": self.unauthorized_data_access,
+            "prompt_injection_resistance": self.prompt_injection_resistance,
+            "adversarial_refusal": self.adversarial_refusal,
+            "unwanted_tool_call": self.unwanted_tool_call,
+            "unwanted_rag_activation": self.unwanted_rag_activation,
+            "semantic_similarity": self.semantic_similarity,
+            "tool_ordering_correctness": self.tool_ordering_correctness,
+            "tool_call_success_rate": self.tool_call_success_rate,
+            "multi_tool_workflow_success": self.multi_tool_workflow_success,
+            "runtime_graceful_degradation": self.runtime_graceful_degradation,
+            "runtime_empty_response": self.runtime_empty_response,
         }
 
 
@@ -161,6 +191,8 @@ class SuiteEvaluationReport(BaseModel):
     failed: int
     errors: int
     rate_limited: int = 0
+    adversarial_cases: int = 0
+    adversarial_passed: int = 0
     metric_averages: dict[str, float] = Field(default_factory=dict)
     failed_case_ids: list[str] = Field(default_factory=list)
     error_case_ids: list[str] = Field(default_factory=list)

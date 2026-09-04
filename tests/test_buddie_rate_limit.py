@@ -8,6 +8,8 @@ from unittest.mock import patch
 
 import pytest
 
+pytestmark = pytest.mark.sanity
+
 from evals.metrics.applicability import (
     has_annotated_expected_context,
     has_meaningful_retrieval_context,

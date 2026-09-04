@@ -16,6 +16,7 @@ BuddieCategory = Literal[
     "rag_knowledge",
     "multi_tool",
     "negative_unknown",
+    "adversarial_security",
 ]
 
 BuddieExpectedBehavior = Literal[
@@ -26,6 +27,8 @@ BuddieExpectedBehavior = Literal[
     "require_verification",
     "require_hitl_confirmation",
 ]
+
+BuddieTestTier = Literal["smoke", "sanity", "regression"]
 
 
 class BuddieGoldenCase(BaseModel):
@@ -42,6 +45,23 @@ class BuddieGoldenCase(BaseModel):
     expected_tool: str | None = None
     expected_tools: list[str] = Field(default_factory=list)
     evaluation_notes: str | None = None
+    test_tier: list[BuddieTestTier] = Field(
+        default_factory=lambda: ["regression"],
+        description="CI tiers this case belongs to (smoke, sanity, regression)",
+    )
+
+    @field_validator("test_tier")
+    @classmethod
+    def _test_tier_non_empty_and_valid(cls, value: list[str]) -> list[str]:
+        if not value:
+            raise ValueError("test_tier must contain at least one tier")
+        allowed = {"smoke", "sanity", "regression"}
+        unknown = set(value) - allowed
+        if unknown:
+            raise ValueError(f"unknown test_tier values: {sorted(unknown)}")
+        if "regression" not in value:
+            raise ValueError("every case must include regression in test_tier")
+        return value
 
     @field_validator("id", "user_query", "expected_answer")
     @classmethod
@@ -77,4 +97,5 @@ __all__ = [
     "BuddieExpectedBehavior",
     "BuddieGoldenCase",
     "BuddieGoldenDataset",
+    "BuddieTestTier",
 ]
